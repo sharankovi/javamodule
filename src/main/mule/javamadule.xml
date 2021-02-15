@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="92778be2-de71-4c82-8f24-c57f2c5efad1" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="javamaduleFlow" doc:id="0dec7954-80b4-4716-971c-685de9f1524e" >
+		<http:listener doc:name="Listener" doc:id="1b26f7eb-5d44-4f92-ab3c-8f200bccd015" config-ref="HTTP_Listener_config" path="/javatest"/>
+		<java:invoke-static method="sayHello(java.lang.String,java.lang.String)" doc:name="Invoke static" doc:id="5e09b796-313d-4bbc-8feb-acdbc590ef07" class="com.muletutorial.StockQouteService">
+			<java:args ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	name: attributes.queryParams.name as String,
+	country: attributes.queryParams.country as String
+}]]]></java:args>
+		</java:invoke-static>
+		<logger level="INFO" doc:name="Logger" doc:id="7a16c44b-4fd4-4f4a-b0f6-ce38319885bc" message="#[payload]"/>
+	</flow>
+	<flow name="javamaduleFlow1" doc:id="a4182926-96d0-432c-acd0-e585a911c5a4" >
+		<http:listener doc:name="Listener" doc:id="44cdbe3a-8615-4883-b1c2-2ed885de5c79" config-ref="HTTP_Listener_config" path="/stockprice/{stock}"/>
+		<java:new constructor="StockQouteService()" doc:name="New" doc:id="2f0f050f-0ab5-4c57-9813-457cf864daee" class="com.muletutorial.StockQouteService" target="quote"/>
+		<java:invoke doc:name="Invoke" doc:id="82050a9d-fbb7-47f2-846b-9916fc14ed3e" instance="#[vars.quote]" class="com.muletutorial.StockQouteService" method="getStockPrice(java.lang.String)">
+			<java:args ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	stockSymbol: attributes.uriParams.stock as String
+}]]]></java:args>
+		</java:invoke>
+		<logger level="INFO" doc:name="Logger" doc:id="e49c8f52-dc76-479a-925c-55b84efee608" />
+	</flow>
+</mule>
